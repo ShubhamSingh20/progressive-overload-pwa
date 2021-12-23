@@ -1,12 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import Router from 'context/Routing';
+import './bootstrap.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import WorkoutProvider from 'context/WorkoutContext';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <WorkoutProvider>
+        <App />
+      </WorkoutProvider>
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 );
