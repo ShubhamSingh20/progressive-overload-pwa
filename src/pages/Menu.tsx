@@ -2,6 +2,7 @@ import Toggle from "components/Toggle"
 import { useEffect, useContext } from "react"
 import { WorkoutContext } from "context/WorkoutContext"
 import { BRO_SPLIT, PPL_SPLIT, SplitTypeEnum } from "constants/Workout"
+import { RoutingContext, pagesMapping } from "context/Routing"
 
 const style = {
   container: {
@@ -19,10 +20,7 @@ function MenuPage() {
     workoutSplits, setWorkoutSplit 
   } = useContext(WorkoutContext)
 
-  useEffect(() => 
-    setWorkoutSplit(currentSplitType === SplitTypeEnum.PPL ? PPL_SPLIT : BRO_SPLIT), 
-    [currentSplitType]
-  )
+  const {setPath} = useContext(RoutingContext)
 
   return (
     <>
@@ -32,15 +30,22 @@ function MenuPage() {
             <h3>Progressive Overload</h3>
           </div>
           <div className="d-grid gap-2">
-            {workoutSplits.map((d) => <button className="btn btn-lg btn-outline-primary" type="button">{d}</button>)}
+            {workoutSplits.map((d) => 
+              <button 
+                type="button"
+                className="btn btn-lg btn-outline-primary" 
+                onClick={() => setPath(pagesMapping.workoutLog, {splitDay: d.toLowerCase()})}
+                >{d}
+              </button>
+              )}
           </div>
-          <div className="card-footer text-center">
+          {/* <div className="card-footer text-center">
             <Toggle
               title="Workout Split"
               label="workout-split"
               onToggle={() => setCurrentSplitType(currentSplitType === SplitTypeEnum.PPL ? SplitTypeEnum.BRO : SplitTypeEnum.PPL)}
             />
-          </div>
+          </div> */}
         </div>
       </div>
     </>

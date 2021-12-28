@@ -16,7 +16,7 @@ export const WorkoutContext = createContext<WorkoutContextType>({
 });
 
 const WorkoutProvider : React.FC = ({children}) => {
-  const [workoutSplits, setWorkoutSplit] = useState([])
+  const [workoutSplits, setWorkoutSplit] = useState(PPL_SPLIT)
   const [currentSplitType, setCurrentSplitType] = useState(SplitTypeEnum.PPL)
   
   const value = useMemo(

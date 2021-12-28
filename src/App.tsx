@@ -10,6 +10,7 @@ function App() {
 
   // const {setPage} = useContext(RoutingContext)
   //  onClick={() => setPage(pagesMapping.about)}>
+  console.log(page)
   return (
     <>
     {(pagesMapping.menu === page) && <MenuPage />}
