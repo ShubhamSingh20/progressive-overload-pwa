@@ -16,12 +16,12 @@ const style = {
 
 interface Props {
   workout: Workout,
-  onEdit: Function,
+  openEditForum: Function,
   onDelete: Function,
   children?: React.ReactNode
 }
 
-const ExerciseCard: React.FC<Props> = ({ workout, onEdit, onDelete, children }) => {
+const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, children }) => {
   return (
     <div className="card" style={{ maxWidth: '98%' }}>
       <div className="card-header">
@@ -39,7 +39,7 @@ const ExerciseCard: React.FC<Props> = ({ workout, onEdit, onDelete, children }) 
       </div>
       <div className="card-footer">
         <div className="d-flex justify-content-between">
-          <i className="fa fa-pencil fa-2x" aria-hidden={true} />
+          <i className="fa fa-pencil fa-2x" aria-hidden={true} onClick={(e) => openEditForum(workout.id)} />
           <i className="fa fa-trash-o fa-2x" aria-hidden={true} onDoubleClick={(e) => onDelete(workout.id)} />
         </div>
       </div>
@@ -48,7 +48,7 @@ const ExerciseCard: React.FC<Props> = ({ workout, onEdit, onDelete, children }) 
 }
 
 interface ExerciseForumProps {
-  workout?: Workout,
+  workout?: Workout|null,
   splitDay: string,
   close: Function,
   onSubmit: Function
@@ -56,8 +56,8 @@ interface ExerciseForumProps {
 
 const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Ref<HTMLDivElement>) => {
 
-  const { close, onSubmit, splitDay } = props;
-  const [forumValues, setFormValues] = useState({
+  const { close, onSubmit, splitDay, workout } = props;
+  const [forumValues, setFormValues] = useState(!!workout ? workout : {
     splitDay: splitDay,
     exerciseName: '',
     repCount: 0,
@@ -151,6 +151,8 @@ function WorkoutLog() {
   const bottomListRef = useRef<HTMLDivElement>(null)
 
   const [newExercise, setNewExercise] = useState(false)
+  const [editWorkout, setEditWorkout] = useState<Workout|null|undefined>(null)
+
   const [refreshLiveQuery, setRefreshLiveQuery] = useState(false)
 
   useEffect(() => {
@@ -167,10 +169,15 @@ function WorkoutLog() {
     [splitDay, refreshLiveQuery]
   );
 
-  const editWorkout = (id: number, editedWorkout: Workout) => {
-    db.workouts.where("id").equals(id).modify((w) => editedWorkout)
+  const updateWorkout = (id: number, editedWorkout: Workout) => {
+    db.workouts.where("id").equals(id).modify({...editedWorkout})
     setRefreshLiveQuery(!refreshLiveQuery)
     setNewExercise(false)
+  }
+
+  const openEditForum = (id: number) => {
+    setNewExercise(true)
+    setEditWorkout(workouts?.filter(w => w.id === id)[0])
   }
 
   const deleteWorkout = (id: number) => {
@@ -179,6 +186,12 @@ function WorkoutLog() {
   }
 
   const onSubmitHandler = (newWorkout: Workout) => {
+    console.log(newWorkout)
+    if (!!newWorkout.id) {
+      updateWorkout(newWorkout.id, newWorkout)
+      return
+    }
+    
     db.workouts.add(newWorkout)
     setNewExercise(false)
   }
@@ -209,12 +222,13 @@ function WorkoutLog() {
             {workouts?.map((w) =>
               <ExerciseCard
                 workout={w}
-                onEdit={editWorkout}
+                openEditForum={openEditForum}
                 onDelete={deleteWorkout}
               />
             )}
             {workouts.length === 0 && <h1>Wow, Such emptyness !</h1>}
             {newExercise && <ExerciseForum
+              workout={editWorkout}
               ref={bottomListRef}
               close={() => setNewExercise(false)}
               splitDay={splitDay as string}
