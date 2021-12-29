@@ -6,9 +6,6 @@ import WeightConverterInput from 'components/WeightConverterInput';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
 const style = {
-  container: {
-    marginTop: '10%'
-  },
   card: {
     width: '30%',
     minHeight: '40%',
@@ -188,56 +185,54 @@ function WorkoutLog() {
 
   return (
     <>
-      <div className="d-flex justify-content-center" style={style.container}>
-        <div className="card" style={{ ...style.card }}>
-          <div className="card-header">
-            <div className="row">
-              <div className="col col-5">
-                <button 
-                  className="btn btn-outline-primary" 
-                  style={{ marginLeft: 'auto' }}
-                  onClick={(e) => setPage(pagesMapping.menu)}
-                > 
-                  <i className="fa fa-arrow-left fa-2x" aria-hidden={true} /> 
-                </button>
-              </div>
-              <div className="col col-7">
-                <p className="h1 text-capitalize">
-                  {splitDay}
-                </p>
-              </div>
+      <div className="card" style={{ ...style.card }}>
+        <div className="card-header">
+          <div className="row">
+            <div className="col col-5">
+              <button
+                className="btn btn-outline-primary"
+                style={{ marginLeft: 'auto' }}
+                onClick={(e) => setPage(pagesMapping.menu)}
+              >
+                <i className="fa fa-arrow-left fa-2x" aria-hidden={true} />
+              </button>
+            </div>
+            <div className="col col-7">
+              <p className="h1 text-capitalize">
+                {splitDay}
+              </p>
             </div>
           </div>
-          <div className="card-body" style={{ overflowY: 'scroll' }}>
-            {!!workouts && <div className="d-grid gap-2">
-              {workouts?.map((w) =>
-                <ExerciseCard
-                  workout={w}
-                  onEdit={editWorkout}
-                  onDelete={deleteWorkout}
-                />
-              )}
-              {workouts.length === 0 && <h1>Wow, Such emptyness !</h1>}
-              {newExercise && <ExerciseForum
-                ref={bottomListRef}
-                close={() => setNewExercise(false)}
-                splitDay={splitDay as string}
-                onSubmit={onSubmitHandler}
-              />}
-            </div>}
-          </div>
-          <div className="card-footer">
-            <button
-              type="button"
-              className="btn col-12 me-2 btn-outline-primary"
-              onClick={(e) => {
-                e.preventDefault()
-                setNewExercise(true)
-              }}
-            >
-              <i className="fa fa-plus fa-2x" aria-hidden={true} />
-            </button>
-          </div>
+        </div>
+        <div className="card-body" style={{ overflowY: 'scroll' }}>
+          {!!workouts && <div className="d-grid gap-2">
+            {workouts?.map((w) =>
+              <ExerciseCard
+                workout={w}
+                onEdit={editWorkout}
+                onDelete={deleteWorkout}
+              />
+            )}
+            {workouts.length === 0 && <h1>Wow, Such emptyness !</h1>}
+            {newExercise && <ExerciseForum
+              ref={bottomListRef}
+              close={() => setNewExercise(false)}
+              splitDay={splitDay as string}
+              onSubmit={onSubmitHandler}
+            />}
+          </div>}
+        </div>
+        <div className="card-footer">
+          <button
+            type="button"
+            className="btn col-12 me-2 btn-outline-primary"
+            onClick={(e) => {
+              e.preventDefault()
+              setNewExercise(true)
+            }}
+          >
+            <i className="fa fa-plus fa-2x" aria-hidden={true} />
+          </button>
         </div>
       </div>
     </>)
