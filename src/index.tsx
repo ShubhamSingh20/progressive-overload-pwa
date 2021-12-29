@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Router from 'context/Routing';
 import './bootstrap.css';
+import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import WorkoutProvider from 'context/WorkoutContext';

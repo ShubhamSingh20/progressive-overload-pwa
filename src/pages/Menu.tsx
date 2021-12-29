@@ -1,4 +1,4 @@
-import Toggle from "components/Toggle"
+// import Toggle from "components/Toggle"
 import { useEffect, useContext } from "react"
 import { WorkoutContext } from "context/WorkoutContext"
 import { BRO_SPLIT, PPL_SPLIT, SplitTypeEnum } from "constants/Workout"

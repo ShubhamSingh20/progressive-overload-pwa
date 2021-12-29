@@ -5,9 +5,10 @@ type SplitDay = 'push'|'pull'|'leg';
 export interface Workout{
   id?: number,
   splitDay: SplitDay,
+  sets: number,
   exerciseName: string,
   repCount: number,
   weightInKg: number,
+  note: string,
   previousRecordInKg: number,
-  note: string
 }
