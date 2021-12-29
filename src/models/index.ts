@@ -10,6 +10,7 @@ class WorkoutDb extends Dexie {
       workouts: `
         ++id,
         splitDay,
+        sets,
         exerciseName,
         repCount,
         weightInKg,
@@ -19,4 +20,4 @@ class WorkoutDb extends Dexie {
   }
 }
 
-// export const db = new WorkoutDb();
+export const db = new WorkoutDb();

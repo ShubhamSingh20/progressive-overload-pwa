@@ -1,4 +1,7 @@
 import { RoutingContext } from 'context/Routing'
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from 'models';
+import { Workout } from 'models/Workout';
 import WeightConverterInput from 'components/WeightConverterInput';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
@@ -15,32 +18,32 @@ const style = {
 }
 
 interface Props {
-  exerciseName: string,
+  workout: Workout,
+  onEdit: Function,
+  onDelete: Function,
   children?: React.ReactNode
 }
 
-const exercisesTmp = ['Bench Press', 'Incline Bench Press', 'Cable Fly', 'Lateral Raises'];
-
-const ExerciseCard: React.FC<Props> = ({ exerciseName, children }) => {
+const ExerciseCard: React.FC<Props> = ({ workout, onEdit, onDelete, children }) => {
   return (
     <div className="card" style={{ maxWidth: '98%' }}>
       <div className="card-header">
-        <p className="h4 text-capitalize">{exerciseName} </p>
+        <p className="h4 text-capitalize">{workout.exerciseName} </p>
       </div>
       <div className="card-body">
         <div className="d-flex flex-column justify-content-around flex-wrap">
-          <p>Reps: 3 x 12</p>
-          <p>Weight: 42kg (131 lbs)</p>
-          <p>PR: 12Kg (25 lbs) </p>
+          <p>Reps: {`${workout.sets} x ${workout.repCount}`}</p>
+          <p>Weight: {`${workout.weightInKg} Kg (${(workout.weightInKg * 2.205).toFixed(2)} lbs)`}</p>
+          <p>PR: {`${workout.previousRecordInKg} Kg (${(workout.previousRecordInKg * 2.205).toFixed(2)} lbs)`} </p>
         </div>
         <div className="text-wrap">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+          {workout.note}
         </div>
       </div>
       <div className="card-footer">
         <div className="d-flex justify-content-between">
           <i className="fa fa-pencil fa-2x" aria-hidden={true} />
-          <i className="fa fa-trash-o fa-2x" aria-hidden={true} />
+          <i className="fa fa-trash-o fa-2x" aria-hidden={true} onDoubleClick={(e) => onDelete(workout.id)} />
         </div>
       </div>
     </div>
@@ -48,34 +51,39 @@ const ExerciseCard: React.FC<Props> = ({ exerciseName, children }) => {
 }
 
 interface ExerciseForumProps {
+  workout?: Workout,
+  splitDay: string,
   close: Function,
   onSubmit: Function
 }
 
 const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Ref<HTMLDivElement>) => {
 
-  const { close, onSubmit } = props;
+  const { close, onSubmit, splitDay } = props;
   const [forumValues, setFormValues] = useState({
+    splitDay: splitDay,
     exerciseName: '',
-    reps: 0,
+    repCount: 0,
     sets: 0,
-    weights: 0,
-    pr: 0,
-    note: ''
-  })
+    previousRecordInKg: 0,
+    note: '',
+  } as Workout)
 
   return (
     <>
-      <form onSubmit={(e) => onSubmit(e)}>
+      <form onSubmit={(e) => {
+        e.preventDefault()
+        onSubmit(forumValues)
+      }}>
         <div className="card" style={{ maxWidth: '98%' }}>
           <div className="card-header">
             <label>
               Exercise Name* :{" "}
-              <input 
-                type="text" 
-                value={forumValues.exerciseName} 
-                required={true} 
-                onChange={(e) => setFormValues({ ...forumValues, exerciseName: e.currentTarget.value })} 
+              <input
+                type="text"
+                value={forumValues.exerciseName}
+                required={true}
+                onChange={(e) => setFormValues({ ...forumValues, exerciseName: e.currentTarget.value })}
               />
             </label>
           </div>
@@ -83,42 +91,42 @@ const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Re
             <div className="d-flex flex-column justify-content-around flex-wrap">
               <label>
                 Reps* :{" "}
-                <input 
-                  type="number" 
-                  value={forumValues.reps} 
+                <input
+                  type="number"
+                  value={forumValues.repCount}
                   required={true}
-                  onChange={(e) => setFormValues({ ...forumValues, reps: parseInt(e.currentTarget.value) })} 
+                  onChange={(e) => setFormValues({ ...forumValues, repCount: parseInt(e.currentTarget.value) })}
                 />
               </label>
               <label>
                 Sets* :{" "}
-                <input 
-                  type="number" 
-                  value={forumValues.sets} 
-                  required={true} 
-                  onChange={(e) => setFormValues({ ...forumValues, sets: parseInt(e.currentTarget.value) })} 
+                <input
+                  type="number"
+                  value={forumValues.sets}
+                  required={true}
+                  onChange={(e) => setFormValues({ ...forumValues, sets: parseInt(e.currentTarget.value) })}
                 />
               </label>
               <div className="d-flex">
-                Weights* :{" "} 
-                <WeightConverterInput 
-                  value={forumValues.weights} 
-                  onChange={(v:number) => setFormValues({ ...forumValues, weights: v})} 
+                Weights* :{" "}
+                <WeightConverterInput
+                  value={forumValues.weightInKg}
+                  onChange={(v: number) => setFormValues({ ...forumValues, weightInKg: v })}
                 />
               </div>
               <label>
                 PR :{" "}
-                <input 
-                  type="number" 
-                  value={forumValues.pr} 
+                <input
+                  type="number"
+                  value={forumValues.previousRecordInKg}
                   required={false}
-                  onChange={(e) => setFormValues({ ...forumValues, pr: parseInt(e.currentTarget.value) || 0 })} 
+                  onChange={(e) => setFormValues({ ...forumValues, previousRecordInKg: parseInt(e.currentTarget.value) || 0 })}
                 />
               </label>
             </div>
             <div className="text-wrap">
               <label>
-                Note: <textarea required={false} value={forumValues.note} rows={5}/>
+                Note: <textarea required={false} value={forumValues.note} rows={5} onChange={(e) => setFormValues({ ...forumValues, note: e.currentTarget.value})}/>
               </label>
             </div>
           </div>
@@ -145,17 +153,37 @@ function WorkoutLog() {
 
   const bottomListRef = useRef<HTMLDivElement>(null)
 
-  const [exercises, setExercise] = useState(exercisesTmp)
   const [newExercise, setNewExercise] = useState(false)
-
-  const onSubmitHandler = (e: React.MouseEvent) => {
-
-  }
+  const [refreshLiveQuery, setRefreshLiveQuery] = useState(false)
 
   useEffect(() => {
     if (newExercise)
       bottomListRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [newExercise])
+
+  const workouts: Array<Workout> | undefined = useLiveQuery(
+    () =>
+      db.workouts
+        .where("splitDay")
+        .equalsIgnoreCase(splitDay as string)
+        .sortBy("id"),
+    [splitDay, refreshLiveQuery]
+  );
+
+  const editWorkout = (id: number, editedWorkout: Workout) => {
+    db.workouts.where("id").equals(id).modify((w) => editedWorkout)
+    setRefreshLiveQuery(!refreshLiveQuery)
+  }
+
+  const deleteWorkout = (id: number) => {
+    db.workouts.where("id").equals(id).delete()
+    setRefreshLiveQuery(!refreshLiveQuery)
+  }
+
+  const onSubmitHandler = (newWorkout: Workout) => {
+    console.log(newWorkout)
+    db.workouts.add(newWorkout)
+  }
 
   return (
     <>
@@ -165,10 +193,21 @@ function WorkoutLog() {
             <p className="h3 text-capitalize">{splitDay}</p>
           </div>
           <div className="card-body" style={{ overflowY: 'scroll' }}>
-            <div className="d-grid gap-2">
-              {exercises.map((d) => <ExerciseCard exerciseName={d} />)}
-              {newExercise && <ExerciseForum ref={bottomListRef} close={() => setNewExercise(false)} onSubmit={onSubmitHandler}/>}
-            </div>
+            {!!workouts && <div className="d-grid gap-2">
+              {workouts?.map((w) =>
+                <ExerciseCard
+                  workout={w}
+                  onEdit={editWorkout}
+                  onDelete={deleteWorkout}
+                />
+              )}
+              {newExercise && <ExerciseForum 
+                ref={bottomListRef} 
+                close={() => setNewExercise(false)} 
+                splitDay={splitDay as string} 
+                onSubmit={onSubmitHandler} 
+              />}
+            </div>}
           </div>
           <div className="card-footer">
             <button
