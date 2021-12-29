@@ -1,4 +1,4 @@
-import { RoutingContext } from 'context/Routing'
+import { RoutingContext, pagesMapping } from 'context/Routing'
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from 'models';
 import { Workout } from 'models/Workout';
@@ -126,7 +126,7 @@ const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Re
             </div>
             <div className="text-wrap">
               <label>
-                Note: <textarea required={false} value={forumValues.note} rows={5} onChange={(e) => setFormValues({ ...forumValues, note: e.currentTarget.value})}/>
+                Note: <textarea required={false} value={forumValues.note} rows={5} onChange={(e) => setFormValues({ ...forumValues, note: e.currentTarget.value })} />
               </label>
             </div>
           </div>
@@ -148,7 +148,7 @@ const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Re
 })
 
 function WorkoutLog() {
-  const { queryParams } = useContext(RoutingContext)
+  const { queryParams, setPage } = useContext(RoutingContext)
   const { splitDay } = queryParams
 
   const bottomListRef = useRef<HTMLDivElement>(null)
@@ -173,6 +173,7 @@ function WorkoutLog() {
   const editWorkout = (id: number, editedWorkout: Workout) => {
     db.workouts.where("id").equals(id).modify((w) => editedWorkout)
     setRefreshLiveQuery(!refreshLiveQuery)
+    setNewExercise(false)
   }
 
   const deleteWorkout = (id: number) => {
@@ -181,16 +182,31 @@ function WorkoutLog() {
   }
 
   const onSubmitHandler = (newWorkout: Workout) => {
-    console.log(newWorkout)
     db.workouts.add(newWorkout)
+    setNewExercise(false)
   }
 
   return (
     <>
       <div className="d-flex justify-content-center" style={style.container}>
         <div className="card" style={{ ...style.card }}>
-          <div className="card-header text-center">
-            <p className="h3 text-capitalize">{splitDay}</p>
+          <div className="card-header">
+            <div className="row">
+              <div className="col col-5">
+                <button 
+                  className="btn btn-outline-primary" 
+                  style={{ marginLeft: 'auto' }}
+                  onClick={(e) => setPage(pagesMapping.menu)}
+                > 
+                  <i className="fa fa-arrow-left fa-2x" aria-hidden={true} /> 
+                </button>
+              </div>
+              <div className="col col-7">
+                <p className="h1 text-capitalize">
+                  {splitDay}
+                </p>
+              </div>
+            </div>
           </div>
           <div className="card-body" style={{ overflowY: 'scroll' }}>
             {!!workouts && <div className="d-grid gap-2">
@@ -201,11 +217,12 @@ function WorkoutLog() {
                   onDelete={deleteWorkout}
                 />
               )}
-              {newExercise && <ExerciseForum 
-                ref={bottomListRef} 
-                close={() => setNewExercise(false)} 
-                splitDay={splitDay as string} 
-                onSubmit={onSubmitHandler} 
+              {workouts.length === 0 && <h1>Wow, Such emptyness !</h1>}
+              {newExercise && <ExerciseForum
+                ref={bottomListRef}
+                close={() => setNewExercise(false)}
+                splitDay={splitDay as string}
+                onSubmit={onSubmitHandler}
               />}
             </div>}
           </div>
