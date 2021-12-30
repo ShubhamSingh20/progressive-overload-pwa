@@ -1,5 +1,3 @@
-export const SCHEMA_VERSION = 1;
-
 type SplitDay = 'push'|'pull'|'leg';
 
 export interface Workout{
@@ -11,4 +9,14 @@ export interface Workout{
   weightInKg: number,
   note: string,
   previousRecordInKg: number,
+}
+
+
+export interface VersioningWorkout{
+  sets: number,
+  workoutId: number,
+  repCount: number,
+  weightInKg: number,
+  previousRecordInKg: number,
+  createdAt: number
 }

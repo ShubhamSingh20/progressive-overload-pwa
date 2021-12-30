@@ -1,8 +1,11 @@
 import Dexie, { Table } from "dexie";
-import { Workout, SCHEMA_VERSION } from "models/Workout";
+import { Workout } from "models/Workout";
+import { Progress } from "models/Progress";
 
+const SCHEMA_VERSION = 1
 class WorkoutDb extends Dexie {
-  workouts!: Table<Workout>;
+  workouts!: Table<Workout>
+  progress!: Table<Progress>
 
   constructor() {
     super("workoutDb");
@@ -15,7 +18,12 @@ class WorkoutDb extends Dexie {
         repCount,
         weightInKg,
         previousRecordInKg,
-        note`
+        note`,
+      progress: `
+        ++id,
+        workoutId,
+        *workoutProgress
+      `
     });
   }
 }

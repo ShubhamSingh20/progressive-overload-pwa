@@ -1,9 +1,11 @@
 import { RoutingContext, pagesMapping } from 'context/Routing'
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from 'models';
-import { Workout } from 'models/Workout';
+import { VersioningWorkout, Workout } from 'models/Workout';
 import WeightConverterInput from 'components/WeightConverterInput';
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Progress } from 'models/Progress';
+import Dexie from 'dexie';
 
 const style = {
   card: {
@@ -14,14 +16,42 @@ const style = {
   }
 }
 
+interface WorkoutProgressionProps {
+  versioningWorkout: Array<VersioningWorkout>
+}
+
+const WorkoutProgression: React.FC<WorkoutProgressionProps> = ({ versioningWorkout }) => (<>
+  {versioningWorkout.map((d, index) =>
+    <div className="card" style={{ maxWidth: '98%' }}>
+      <div className="card-body">
+        <h5 className="card-title">{index + 1} ({new Date(d.createdAt).toDateString()})</h5>
+        <div className="d-flex flex-column justify-content-around flex-wrap">
+          <p>Reps: {`${d.sets} x ${d.repCount}`}</p>
+          <p>Weight: {`${d.weightInKg} Kg (${(d.weightInKg * 2.205).toFixed(2)} lbs)`}</p>
+          <p>PR: {`${d.previousRecordInKg} Kg (${(d.previousRecordInKg * 2.205).toFixed(2)} lbs)`} </p>
+        </div>
+      </div>
+    </div>)
+  }
+</>)
+
 interface Props {
   workout: Workout,
   openEditForum: Function,
   onDelete: Function,
+  listProgression: Function,
   children?: React.ReactNode
 }
 
-const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, children }) => {
+const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, listProgression }) => {
+  const [listProgress, setListProgress] = useState(false)
+  const [versioningWorkout, setVersioningWorkout] = useState<Array<VersioningWorkout> | null>(null)
+
+  useEffect(() => {
+    if (listProgress) listProgression(workout.id as number)
+      .then((d: Progress) => !!d && setVersioningWorkout(d.workoutProgress.reverse()))
+  }, [listProgress])
+
   return (
     <div className="card" style={{ maxWidth: '98%' }}>
       <div className="card-header">
@@ -36,6 +66,8 @@ const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, child
         <div className="text-wrap">
           {workout.note}
         </div>
+        <i className="fa fa-list-ul fa-2x" aria-hidden={true} onClick={(e) => setListProgress(!listProgress)} />
+        {listProgress && !!versioningWorkout && <WorkoutProgression versioningWorkout={versioningWorkout} />}
       </div>
       <div className="card-footer">
         <div className="d-flex justify-content-between">
@@ -48,7 +80,7 @@ const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, child
 }
 
 interface ExerciseForumProps {
-  workout?: Workout|null,
+  workout?: Workout | null,
   splitDay: string,
   close: Function,
   onSubmit: Function
@@ -151,7 +183,7 @@ function WorkoutLog() {
   const bottomListRef = useRef<HTMLDivElement>(null)
 
   const [newExercise, setNewExercise] = useState(false)
-  const [editWorkout, setEditWorkout] = useState<Workout|null|undefined>(null)
+  const [editWorkout, setEditWorkout] = useState<Workout | null | undefined>(null)
 
   const [refreshLiveQuery, setRefreshLiveQuery] = useState(false)
 
@@ -167,17 +199,66 @@ function WorkoutLog() {
         .equalsIgnoreCase(splitDay as string)
         .sortBy("id"),
     [splitDay, refreshLiveQuery]
-  );
+  )
 
-  const updateWorkout = (id: number, editedWorkout: Workout) => {
-    db.workouts.where("id").equals(id).modify({...editedWorkout})
-    setRefreshLiveQuery(!refreshLiveQuery)
+  const listWorkoutProgress = async (id: number) =>
+    await db.progress.where("workoutId").equals(id).first()
+
+  const doWorkoutVersioning = async (prev: Workout, updated: Workout) => {
+
+    const isChanged = prev.sets !== updated.sets
+      || prev.repCount !== updated.repCount
+      || prev.weightInKg !== updated.weightInKg
+      || prev.previousRecordInKg !== updated.previousRecordInKg
+
+    if (!isChanged) return
+
+    // create a new versioned workout instead to backup preview values
+    const versionedWorkout = {
+      sets: updated?.sets,
+      repCount: updated?.repCount,
+      weightInKg: updated?.weightInKg,
+      previousRecordInKg: updated?.previousRecordInKg as number,
+      createdAt: Date.now()
+    } as VersioningWorkout
+
+    const progress: Progress | undefined = await db.progress
+      .where("workoutId")
+      .equals(updated.id as number)
+      .first()
+
+    // if progress records doesn't exist then create new one
+    if (!(!!progress)) {
+      const cloned = {
+        workoutId: editWorkout?.id,
+        workoutProgress: [versionedWorkout]
+      } as Progress
+      db.progress.add(cloned)
+    } else {
+      // if progress record exist just update that
+      console.log(progress)
+      db.progress
+        .where("workoutId")
+        .equals(updated.id as number)
+        .modify((e) => e.workoutProgress = [...e.workoutProgress, versionedWorkout])
+    }
+  }
+
+  const updateWorkout = (id: number, modifiedWorkout: Workout) => {
+    db.workouts
+      .where("id")
+      .equals(id)
+      .modify({ ...modifiedWorkout })
+
+    doWorkoutVersioning({ ...editWorkout } as Workout, modifiedWorkout)
+    setEditWorkout(null)
     setNewExercise(false)
+    setRefreshLiveQuery(!refreshLiveQuery)
   }
 
   const openEditForum = (id: number) => {
     setNewExercise(true)
-    setEditWorkout(workouts?.filter(w => w.id === id)[0])
+    setEditWorkout(workouts?.find(w => w.id === id))
   }
 
   const deleteWorkout = (id: number) => {
@@ -186,12 +267,11 @@ function WorkoutLog() {
   }
 
   const onSubmitHandler = (newWorkout: Workout) => {
-    console.log(newWorkout)
     if (!!newWorkout.id) {
       updateWorkout(newWorkout.id, newWorkout)
       return
     }
-    
+
     db.workouts.add(newWorkout)
     setNewExercise(false)
   }
@@ -219,9 +299,10 @@ function WorkoutLog() {
         </div>
         <div className="card-body" style={{ overflowY: 'scroll' }}>
           {!!workouts && <div className="d-grid gap-2">
-            {workouts?.map((w) =>
+            {workouts?.filter((w) => w.id !== editWorkout?.id)?.map((w) =>
               <ExerciseCard
                 workout={w}
+                listProgression={listWorkoutProgress}
                 openEditForum={openEditForum}
                 onDelete={deleteWorkout}
               />
@@ -230,7 +311,10 @@ function WorkoutLog() {
             {newExercise && <ExerciseForum
               workout={editWorkout}
               ref={bottomListRef}
-              close={() => setNewExercise(false)}
+              close={() => {
+                setNewExercise(false)
+                setEditWorkout(null)
+              }}
               splitDay={splitDay as string}
               onSubmit={onSubmitHandler}
             />}
