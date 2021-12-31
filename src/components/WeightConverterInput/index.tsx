@@ -14,7 +14,7 @@ const WeightConverterInput: React.FC<Props> = ({ value, onChange }) => {
   const toFloat = (e: React.ChangeEvent<HTMLInputElement>) => parseFloat(parseFloat(e.currentTarget.value).toFixed(2))
 
   return (
-    <div className="d-flex">
+    <div>
       <div className="input-container">
         <input id="weightInkg" type="number"
           value={weight.kg}

@@ -140,7 +140,7 @@ const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Re
                 onChange={(v: number) => setFormValues({ ...forumValues, weightInKg: v })}
               />
               <label>
-                PR :{" "}
+                PR (KG):{" "}
                 <input
                   type="number"
                   value={forumValues.previousRecordInKg}
