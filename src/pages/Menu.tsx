@@ -8,10 +8,7 @@ const style = {
     marginTop: '10%'
   },
   card: {
-    width: '30%',
-    minHeight: '40%',
-    height: '75vh',
-    minWidth: '70%'
+    minHeight: '90vh'
   }
 }
 

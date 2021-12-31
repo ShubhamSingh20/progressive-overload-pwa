@@ -5,14 +5,15 @@ interface Props {
 
 const style = {
   container: {
-    marginTop: '10%'
+    margin: '2px',
+    
   },
 }
 
 export default function({children} : Props) {
 
   return (
-    <div className="d-flex justify-content-center" style={style.container}>
+    <div className="container" style={style.container}>
       {children}
     </div>
   )
