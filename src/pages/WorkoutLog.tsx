@@ -9,7 +9,8 @@ import Dexie from 'dexie';
 
 const style = {
   card: {
-    minHeight: '90vh'
+    minHeight: '97vh',
+    maxHeight: '97vh'
   }
 }
 
@@ -133,13 +134,11 @@ const ExerciseForum = React.forwardRef((props: ExerciseForumProps, ref: React.Re
                   onChange={(e) => setFormValues({ ...forumValues, sets: parseInt(e.currentTarget.value) })}
                 />
               </label>
-              <div className="d-flex">
-                Weights* :{" "}
-                <WeightConverterInput
-                  value={forumValues.weightInKg}
-                  onChange={(v: number) => setFormValues({ ...forumValues, weightInKg: v })}
-                />
-              </div>
+              Weights* :{" "}
+              <WeightConverterInput
+                value={forumValues.weightInKg}
+                onChange={(v: number) => setFormValues({ ...forumValues, weightInKg: v })}
+              />
               <label>
                 PR :{" "}
                 <input
