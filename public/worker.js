@@ -1,7 +1,6 @@
 var CACHE_NAME = 'pwa-task-manager';
 var urlsToCache = [
-  '/menu',
-  '/workout_log'
+  '/'
 ];
 
 // Install a service worker
