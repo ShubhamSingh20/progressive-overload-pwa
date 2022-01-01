@@ -60,9 +60,11 @@ const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, listP
           <p>Reps: {`${workout.sets} x ${workout.repCount}`}</p>
           <p>Weight: {`${workout.weightInKg} Kg (${(workout.weightInKg * 2.205).toFixed(2)} lbs)`}</p>
           <p>PR: {`${workout.previousRecordInKg} Kg (${(workout.previousRecordInKg * 2.205).toFixed(2)} lbs)`} </p>
-        </div>
-        <div className="text-wrap">
-          {workout.note}
+          <div className="text-wrap border border-dark mb-3">
+            <ul>
+              {workout.note.split("\n").map((e) => e.length> 0 && <li>{e}</li>)}
+            </ul>
+          </div>
         </div>
         <i className="fa fa-list-ul fa-2x" aria-hidden={true} onClick={(e) => setListProgress(!listProgress)} />
         {listProgress && !!versioningWorkout && <WorkoutProgression versioningWorkout={versioningWorkout} />}
@@ -211,10 +213,10 @@ function WorkoutLog() {
 
     // create a new versioned workout instead to backup preview values
     const versionedWorkout = {
-      sets: updated?.sets,
-      repCount: updated?.repCount,
-      weightInKg: updated?.weightInKg,
-      previousRecordInKg: updated?.previousRecordInKg as number,
+      sets: prev?.sets,
+      repCount: prev?.repCount,
+      weightInKg: prev?.weightInKg,
+      previousRecordInKg: prev?.previousRecordInKg as number,
       createdAt: Date.now()
     } as VersioningWorkout
 
