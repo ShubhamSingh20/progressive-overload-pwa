@@ -50,6 +50,9 @@ const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, listP
       .then((d: Progress) => !!d && setVersioningWorkout(d.workoutProgress.reverse()))
   }, [listProgress])
 
+  const noteByLine = workout.note.split("\n")
+  const isBodyWeightOnly = (workout.previousRecordInKg === 0 && workout.weightInKg === 0)
+
   return (
     <div className="card" style={{ maxWidth: '98%' }}>
       <div className="card-header">
@@ -58,13 +61,16 @@ const ExerciseCard: React.FC<Props> = ({ workout, openEditForum, onDelete, listP
       <div className="card-body">
         <div className="d-flex flex-column justify-content-around flex-wrap">
           <p>Reps: {`${workout.sets} x ${workout.repCount}`}</p>
-          <p>Weight: {`${workout.weightInKg} Kg (${(workout.weightInKg * 2.205).toFixed(2)} lbs)`}</p>
-          <p>PR: {`${workout.previousRecordInKg} Kg (${(workout.previousRecordInKg * 2.205).toFixed(2)} lbs)`} </p>
-          <div className="text-wrap border border-dark mb-3">
+          <p>Weight: {isBodyWeightOnly ?
+            <i className="fa fa-male" aria-hidden={true} /> : `${workout.weightInKg} Kg (${(workout.weightInKg * 2.205).toFixed(2)} lbs)`}
+          </p>
+          {workout.previousRecordInKg > 0 && 
+            <p>PR <i className="fa fa-trophy" aria-hidden={true} /> : {`${workout.previousRecordInKg} Kg (${(workout.previousRecordInKg * 2.205).toFixed(2)} lbs)`} </p>}
+          {noteByLine.length - 1 > 0 && <div className="text-wrap border border-dark mb-3">
             <ul>
-              {workout.note.split("\n").map((e) => e.length> 0 && <li>{e}</li>)}
+              {noteByLine.map((e) => e.length > 0 && <li>{e}</li>)}
             </ul>
-          </div>
+          </div>}
         </div>
         <i className="fa fa-list-ul fa-2x" aria-hidden={true} onClick={(e) => setListProgress(!listProgress)} />
         {listProgress && !!versioningWorkout && <WorkoutProgression versioningWorkout={versioningWorkout} />}
